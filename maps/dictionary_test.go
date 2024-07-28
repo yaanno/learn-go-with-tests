@@ -44,6 +44,27 @@ func TestAdd(t *testing.T) {
 	})
 }
 
+func TestUpdate(t *testing.T) {
+	t.Run("update existing word", func(t *testing.T) {
+		word := "word"
+		description := "this is an other description"
+		otherDefinition := "this is a definition"
+		dictionary := Dictionary{
+			word: description,
+		}
+		err := dictionary.Update(word, otherDefinition)
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, otherDefinition)
+	})
+	t.Run("new word", func(t *testing.T) {
+		word := "word"
+		description := "this is an other description"
+		dictionary := Dictionary{}
+		err := dictionary.Update(word, description)
+		assertError(t, err, ErrWordDoesNotExists)
+	})
+}
+
 func assertDefinition(t *testing.T, dictionary Dictionary, word, description string) {
 	got, err := dictionary.Search(word)
 	if err != nil {
@@ -55,14 +76,14 @@ func assertDefinition(t *testing.T, dictionary Dictionary, word, description str
 func assertStrings(t testing.TB, got, want string) {
 	t.Helper()
 	if got != want {
-		t.Errorf("got %q want %q given %q", got, want, "test")
+		t.Errorf("got %q want %q", got, want)
 	}
 }
 
 func assertError(t testing.TB, got, want error) {
 	t.Helper()
 	if got != want {
-		t.Errorf("got %q want %q given %q", got, want, "test")
+		t.Errorf("got %q want %q", got, want)
 	}
 }
 
@@ -75,8 +96,9 @@ func (e DictionaryErr) Error() string {
 }
 
 const (
-	ErrNotFound   = DictionaryErr("could not find that word")
-	ErrWordExists = DictionaryErr("word already exists")
+	ErrNotFound          = DictionaryErr("could not find word")
+	ErrWordExists        = DictionaryErr("word already exists")
+	ErrWordDoesNotExists = DictionaryErr("word does not exists")
 )
 
 func (d Dictionary) Search(word string) (string, error) {
@@ -94,6 +116,19 @@ func (d Dictionary) Add(word, description string) error {
 		d[word] = description
 	case nil:
 		return ErrWordExists
+	default:
+		return err
+	}
+	return nil
+}
+
+func (d Dictionary) Update(word, description string) error {
+	_, err := d.Search(word)
+	switch err {
+	case ErrNotFound:
+		return ErrWordDoesNotExists
+	case nil:
+		d[word] = description
 	default:
 		return err
 	}
