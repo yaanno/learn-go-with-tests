@@ -65,6 +65,16 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
+func TestDelete(t *testing.T) {
+	word := "test"
+	dictionary := Dictionary{
+		word: "test definition",
+	}
+	dictionary.Delete(word)
+	_, err := dictionary.Search(word)
+	assertError(t, err, ErrNotFound)
+}
+
 func assertDefinition(t *testing.T, dictionary Dictionary, word, description string) {
 	got, err := dictionary.Search(word)
 	if err != nil {
@@ -100,6 +110,10 @@ const (
 	ErrWordExists        = DictionaryErr("word already exists")
 	ErrWordDoesNotExists = DictionaryErr("word does not exists")
 )
+
+func (d Dictionary) Delete(word string) {
+	delete(d, word)
+}
 
 func (d Dictionary) Search(word string) (string, error) {
 	definition, ok := d[word]
